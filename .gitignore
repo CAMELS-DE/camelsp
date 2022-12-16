@@ -130,4 +130,4 @@ dmypy.json
 
 # project settings
 gfz
-data/*
+input_data/*
