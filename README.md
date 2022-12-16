@@ -24,14 +24,14 @@ Help scripts indicating the usage for possible re-processing are located at the 
 
 ## NUTS
 
-We use nuts3 codes to derive ids and to build a folder structure. There is a case-insensitve utility function
-for looking up the top level 3 NUTS codes in the package, which should accept many existing abbreviations:
+We use nuts2 codes to derive ids and to build a folder structure. There is a case-insensitve utility function
+for looking up the top level 2 NUTS codes in the package, which should accept many existing abbreviations:
 
 ```python
 from camelsp import nuts3
 
-nuts3('Ba-Wü')                  # gives DE1
-nuts3('NRW')                    # gives DEA
-nuts3('Pfalz')                  # gives DEB
-nuts3('mecklenburg Vorpommern') # gives DE8
+nuts('Ba-Wü')                  # gives DE1
+nuts('NRW')                    # gives DEA
+nuts('Pfalz')                  # gives DEB
+nuts('mecklenburg Vorpommern') # gives DE8
 ```
