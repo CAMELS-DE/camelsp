@@ -67,6 +67,6 @@ NUTS3 = dict(
     th='DEG'
 )
 
-def nuts3(key: str) -> str:
+def nuts(key: str) -> str:
     short = __BL_TRANS.get(key.lower(), key.lower())
     return NUTS3[short]
