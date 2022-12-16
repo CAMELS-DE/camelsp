@@ -1,4 +1,14 @@
 from typing import Dict
+import os
+
+# This package is intended to be installed along with the data folder
+BASEPATH = os.path.abspath(os.path.dirname(__file__))
+
+_DEFAULT_INPUT_PATH = os.path.abspath(os.path.join(BASEPATH, '..', 'input_data'))
+_DEFAULT_OUTPUT_PATH = os.path.abspath(os.path.join(BASEPATH, '..', 'output_data'))
+INPUT_PATH = os.environ.get('INPUT_DIR', _DEFAULT_INPUT_PATH)
+OUTPUT_PATH = os.environ.get('OUTPUT_DIR', _DEFAULT_OUTPUT_PATH)
+
 
 # helper 
 __BL_TRANS = {
@@ -48,7 +58,7 @@ __BL_TRANS = {
     'thueringen': 'th'
 }
 
-NUTS3 = dict(
+_NUTS = dict(
     bw='DE1',
     by='DE2',
     b='DE3',
@@ -67,6 +77,21 @@ NUTS3 = dict(
     th='DEG'
 )
 
+
 def nuts(key: str) -> str:
     short = __BL_TRANS.get(key.lower(), key.lower())
-    return NUTS3[short]
+    return _NUTS[short]
+
+
+def get_path(bl: str = None):
+    """
+    Return the base output path for the given BundesLand (bl).
+    If no bl is given, return the output root folder
+    """
+    # get the output path
+    if bl is None:
+        return OUTPUT_PATH
+    
+    # get the bundesland
+    bl_folder = nuts(bl)
+    return os.path.join(OUTPUT_PATH, bl_folder)
