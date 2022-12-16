@@ -14,6 +14,8 @@ cd input_data
 wget https://bwsyncarndshare.kit.edu/s/<SHARE_TOKEN>/download
 ```
 
+On https://hub.camels-de.org, the installation can be skipped
+
 ## Scripts
 
 Functions for handling one state specifically are located in the respective subbmodule,
