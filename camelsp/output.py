@@ -19,11 +19,16 @@ class Bundesland(AbstractContextManager):
         self.NUTS = nuts(bl)
 
         # set output path
+        self.base_path = get_path()
         self.output_path = get_path(bl)
         self.meta_path = os.path.abspath(os.path.join(get_path(), 'metadata'))
     
         # for easier access store the default input path as well
         self.input_path = INPUT_PATH
+
+        # create a template for data file names, which can be overwritten
+        # TODO maybe a flag if each variable goes into its own file?
+        self.fname_template = '{nuts_id}_data.csv'
 
     def __enter__(self) -> 'Bundesland':
         return super().__enter__()
@@ -145,11 +150,13 @@ class Bundesland(AbstractContextManager):
             nuts_id = f"{self.NUTS}{'%.5d' % (10000 + i * 10)}"
             out_dir = os.path.join(self.output_path, nuts_id)
 
+            # create the filename
+            fname = self.fname_template.format(nuts_id=nuts_id, nuts=self.NUTS)
             # add the mapping
             nuts_mapping.append({
                 'nuts_id': nuts_id,
                 'provider_id': meta_id, 
-                'path': os.path.relpath(os.path.join(out_dir, 'data.csv'), start=os.path.join(self.output_path, '..'))
+                'path': './' + os.path.relpath(os.path.join(out_dir, fname), start=os.path.join(self.output_path, '..'))
             })
 
             # warn if the folder already exists
@@ -171,7 +178,7 @@ class Bundesland(AbstractContextManager):
 
         return path
 
-    def save_timeseries(self, timeseries: pd.DataFrame, third_party_id: str) -> str:
+    def save_timeseries(self, timeseries: pd.DataFrame, provider_id: str) -> str:
         """
         Pass a final formatted timeseries as pandas DataFrame, without index.
         The date column should be a data column, along with the variable and the 
@@ -185,7 +192,7 @@ class Bundesland(AbstractContextManager):
         timeseries : pandas.DataFrame
             DataFrame with at least three columns: 'date', the variable (q, w)
             and 'flag'.
-        third_party_id : str
+        provider_id : str
             The vendor's id of this timeseries. This will be used to look up
             the correct new id and storage location.
         
@@ -194,4 +201,40 @@ class Bundesland(AbstractContextManager):
         path : str
             Output path in the file system for reference
         """
-        pass
+        # get the nuts mapping
+        nuts_mapping = self.nuts_mapping
+
+        # get the path for the file
+        # TODO: this  an throw a KeyError if the file is not in the metadata
+        fpath = [m['path'] for m in nuts_mapping if m['provider_id'] == provider_id][0]
+        
+        # generate the save path
+        spath = os.path.abspath(os.path.join(self.base_path, fpath))
+
+        # check if there is already data
+        if os.path.exists(spath):
+            data = pd.read_csv(spath, parse_dates=[0])
+        else:
+            data = pd.DataFrame(columns=['date'])
+        
+        # make some column magic
+        col_maps = self.column_mapping
+        timeseries.rename(col_maps, axis=1, inplace=True)
+
+        # TODO: handle a flag table here?
+        
+        # get the column that holds the variable
+        var_col = [c for c in timeseries.columns if c not in ('date', 'flag', )][0]
+
+        # TODO if we are creating one file per variable, we can skip this part
+        if 'flag' in timeseries.columns:
+            flag_col = f'{var_col}_flag'
+            timeseries.rename({'flag': flag_col}, axis=1, inplace=True)
+        
+        # merge with data
+        merged = pd.merge(data.set_index('date'), timeseries.set_index('date'), how='outer', left_index=True, right_index=True).reset_index()
+        
+        # save
+        merged.to_csv(spath, index=False, na_rep='NaN')
+        
+        return spath
