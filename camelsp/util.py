@@ -34,8 +34,8 @@ __BL_TRANS = {
     'meckpom': 'mp',
     'meck-pom': 'mp',
     'mecklenburg vorpommern': 'mp',
-    'ne': 'ne',
-    'niedersachsen': 'ne',
+    'nis': 'nis',
+    'niedersachsen': 'nis',
     'nrw': 'nrw',
     'nordrhein-westfalen': 'nrw',
     'nordrhein westfalen': 'nrw',
@@ -67,7 +67,7 @@ _NUTS = dict(
     hh='DE6',
     he='DE7',
     mp='DE8',
-    ne='DE9',
+    nis='DE9',
     nrw='DEA',
     rlp='DEB',
     sl='DEC',
@@ -77,13 +77,32 @@ _NUTS = dict(
     th='DEG'
 )
 
+_INPUT_DEFAULT_PATHS = dict(
+    DE1='BW_Baden_Wuerttemberg',
+    DE2='BY_Bayern',
+    DE3='B_Berlin',
+    DE4='BR_Brandenburg',
+    DE5='HB_Bremen',
+    DE6='HH_Hamburg',
+    DE7='HE_Hessen',
+    DE8='MP_Mecklenburg_Vorpommern',
+    DE9='NiS_Niedersachsen',
+    DEA='NRW_Nordrhein-Westfalen',
+    DEB='RLP_Rheinland_Pfalz',
+    DEC='SL_Saarland',
+    DED='SN_Sachsen',
+    DEE='SA_Sachsen-Anhalt',
+    DEF='SH_Schleswig-Holstein',
+    DEG='TH_Thueringen'
+)
+
 
 def nuts(key: str) -> str:
     short = __BL_TRANS.get(key.lower(), key.lower())
     return _NUTS[short]
 
 
-def get_path(bl: str = None):
+def get_output_path(bl: str = None):
     """
     Return the base output path for the given BundesLand (bl).
     If no bl is given, return the output root folder
@@ -95,3 +114,22 @@ def get_path(bl: str = None):
     # get the bundesland
     bl_folder = nuts(bl)
     return os.path.join(OUTPUT_PATH, bl_folder)
+
+
+def get_input_path(bl: str = None):
+    """
+    Return the base input path for the given Bundesland (bl).
+    If no bl is given, return the input root folder.
+    """
+    # check if bl is given
+    if bl is None:
+        return INPUT_PATH
+    
+    # get the bundesland
+    if bl in _INPUT_DEFAULT_PATHS.keys():
+        bl_folder = _INPUT_DEFAULT_PATHS[bl]
+    else:
+        bl_folder = _INPUT_DEFAULT_PATHS[nuts(bl)]
+
+    # return the path
+    return os.path.join(INPUT_PATH, bl_folder)
