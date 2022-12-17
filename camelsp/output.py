@@ -9,22 +9,22 @@ import shutil
 
 import pandas as pd
 
-from .util import nuts, get_path, BASEPATH, INPUT_PATH
+from .util import nuts, get_output_path, BASEPATH, get_input_path
 
 
 class Bundesland(AbstractContextManager):
     """"""
-    def __init__(self, bl: str, work_dir: str = None):
+    def __init__(self, bl: str):
         # set the Bundesland
         self.NUTS = nuts(bl)
 
         # set output path
-        self.base_path = get_path()
-        self.output_path = get_path(bl)
-        self.meta_path = os.path.abspath(os.path.join(get_path(), 'metadata'))
+        self.base_path = get_output_path()
+        self.output_path = get_output_path(bl)
+        self.meta_path = os.path.abspath(os.path.join(get_output_path(), 'metadata'))
     
         # for easier access store the default input path as well
-        self.input_path = INPUT_PATH
+        self.input_path = get_input_path(bl)
 
         # create a template for data file names, which can be overwritten
         # TODO maybe a flag if each variable goes into its own file?
@@ -85,14 +85,12 @@ class Bundesland(AbstractContextManager):
 
     @nuts_mapping.setter
     def nuts_mapping(self, new_nuts: List[Dict[str, str]]):
-        # get the current nuts mapping
-        mapping = self.nuts_mapping
-
-        # TODO: generate warnings if we have the nuts or the provider ids
-
-        # extend the mapping
-        mapping.extend(new_nuts)
+        # generate a list of nuts_ids we want to create / update
+        nuts_ids = [c['nuts_id'] for c in new_nuts]
         
+        # get the current nuts mapping, but filter the new_nuts
+        mapping = new_nuts +  [c for c in self.nuts_mapping if c['nuts_id'] not in nuts_ids]
+
         # save
         with open(os.path.join(self.meta_path, 'nuts_mapping.json'), 'w') as f:
             json.dump(mapping, f, indent=4)
