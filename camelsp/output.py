@@ -77,6 +77,8 @@ class Bundesland(AbstractContextManager):
         else:
             mapping = []
         
+        # filter out the nuts of other BL
+        mapping = [m for m in mapping if m['nuts_id'].startswith(self.NUTS)]
         return mapping
     
     @property
