@@ -79,7 +79,7 @@ _NUTS = dict(
 
 _INPUT_DEFAULT_PATHS = dict(
     DE1='BW_Baden_Wuerttemberg',
-    DE2='BY_Bayern',
+    DE2='BY_Bayern/Abfluss_Pegel/Datenanfrage_CAMELS-DE',
     DE3='B_Berlin',
     DE4='BR_Brandenburg',
     DE5='HB_Bremen',
