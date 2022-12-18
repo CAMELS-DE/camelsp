@@ -98,7 +98,22 @@ class Bundesland(AbstractContextManager):
         # generate a csv for Michi Stoelzle ;)
         df = pd.DataFrame(mapping)
         df.to_csv(os.path.join(self.meta_path, 'nuts_mapping.csv'), index=False)
+
+    def save_warnings(self, warns: List[warnings.WarningMessage]) -> str:
+        """
+        Create a error log in the metadata directory for the current BL.
+        """
+        # get the path
+        path = os.path.join(self.meta_path, f"{self.NUTS}_error.log")
+
+        # write a log - overwrite if it already exists
+        with open(path, 'w') as f:
+            # use only the message, it has ;-separated format
+            f.write("provider_id;warning_type;message;additional_context")
+            f.write('\n'.join([w.message.args[0] for w in warns]))
         
+        return path         
+
     def save_raw_metadata(self, meta: pd.DataFrame, id_column: Union[str, int], overwrite: bool = False) -> str:
         """
         Pass the raw metadata dump to save it to the output locations.
