@@ -1,5 +1,7 @@
 from typing import Dict
 import os
+import json 
+import pandas as pd
 
 # This package is intended to be installed along with the data folder
 BASEPATH = os.path.abspath(os.path.dirname(__file__))
@@ -133,3 +135,23 @@ def get_input_path(bl: str = None):
 
     # return the path
     return os.path.join(INPUT_PATH, bl_folder)
+
+
+def get_full_nuts_mapping(base_path = OUTPUT_PATH, format='json'):
+    """Get the NUTS mapping to provider_di for ALL states"""
+    # build file name
+    fname = os.path.join(base_path, 'metadata', 'nuts_mapping.json')
+
+    # check if exists
+    if not os.path.exists(fname):
+        raise FileNotFoundError(f"Can't find the nuts_mapping at {fname}")
+    
+    # read
+    with open(fname, 'r') as f:
+        js = json.load(f)
+    
+    # return
+    if format.lower() == 'json':
+        return js
+    elif format.lower() in ('csv', 'df', 'dataframe'):
+        return pd.DataFrame(js)

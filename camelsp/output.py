@@ -9,7 +9,7 @@ import shutil
 
 import pandas as pd
 
-from .util import nuts, get_output_path, BASEPATH, get_input_path
+from .util import nuts, get_output_path, BASEPATH, get_input_path, get_full_nuts_mapping
 
 
 class Bundesland(AbstractContextManager):
@@ -90,8 +90,11 @@ class Bundesland(AbstractContextManager):
         # generate a list of nuts_ids we want to create / update
         nuts_ids = [c['nuts_id'] for c in new_nuts]
         
+        # here we need to load all nuts
+        all_nuts = get_full_nuts_mapping(self.base_path, format='json')
+
         # get the current nuts mapping, but filter the new_nuts
-        mapping = new_nuts +  [c for c in self.nuts_mapping if c['nuts_id'] not in nuts_ids]
+        mapping = new_nuts +  [c for c in all_nuts if c['nuts_id'] not in nuts_ids]
 
         # save
         with open(os.path.join(self.meta_path, 'nuts_mapping.json'), 'w') as f:
