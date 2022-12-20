@@ -12,6 +12,11 @@ INPUT_PATH = os.environ.get('INPUT_DIR', _DEFAULT_INPUT_PATH)
 OUTPUT_PATH = os.environ.get('OUTPUT_DIR', _DEFAULT_OUTPUT_PATH)
 
 
+def _get_logo():
+    with open(os.path.join(BASEPATH, 'logo.bin'), 'r') as f:
+        return f"data:image/png;base64,{f.read()}"
+
+
 # helper 
 __BL_TRANS = {
     'bw': 'bw',
