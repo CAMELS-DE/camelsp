@@ -311,7 +311,6 @@ class Bundesland(AbstractContextManager):
         
         # reports container
         reports = []
-        used_ids = []
 
         # load the logo
         logo = _get_logo()
@@ -322,39 +321,41 @@ class Bundesland(AbstractContextManager):
             if output_folder is None:
                 output_folder = os.path.join(self.base_path, 'reports')
             
-            # build the filename
-            filename = os.path.join(output_folder, f"{nuts_id}.{fmt.lower()}")
-
             # check if the output location exists
             if not os.path.exists(output_folder):
                 os.makedirs(output_folder)
 
         # instantiate all reports
         for nuts_id in nuts_ids:
+            # before reading data raise or skip if we need a report and already have it
+            if fmt.lower() != 'object':
+                filename = os.path.join(output_folder, f"{nuts_id}.{fmt.lower()}")
+                # check if the file already exists
+                if os.path.exists(filename):
+                    if if_exists == 'raise':
+                        raise FileExistsError(f"{filename} already exists and if_exists policy is 'raise'")
+                    elif if_exists == 'omit' or if_exists == 'skip':
+                        continue
+            
+            # load the data
             try:
                 df = self.get_data(nuts_id, date_index=False)
             except FileNotFoundError:
                 warnings.warn(f"ID: {nuts_id} has no data")
                 continue
-            
+
             # instantiate the report
             #report = ProfileReport(df=df, title=nuts_id)
             report = df.profile_report(html={'style': {'logo': logo, 'theme': 'flatly'}}, progress_bar=False, title=nuts_id)
-            reports.append(report)
-            used_ids.append(nuts_id)
-        
+            
+            # if return, then append to container
+            if fmt.lower() == 'object':
+                reports.append(report)
+            
+            #else write a file
+            else:
+                report.to_file(filename)
+
         # check the format type
         if fmt.lower() == 'object':
             return reports
-        
-        # save all
-        for report, nuts_id in zip(reports, used_ids):
-            # check if the file already exists
-            if os.path.exists(filename):
-                if if_exists == 'raise':
-                    raise FileExistsError(f"{filename} already exists and if_exists policy is 'raise'")
-                elif if_exists == 'omit' or if_exists == 'skip':
-                    continue
-            
-            # if not aborted, create or replace the file
-            report.to_file(filename)
