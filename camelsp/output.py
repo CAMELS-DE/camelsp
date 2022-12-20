@@ -284,7 +284,7 @@ class Bundesland(AbstractContextManager):
         
         return df
 
-    def generate_reports(self, nuts_ids: Union[List[str], str] = 'all', fmt: str = 'html', output_folder: str = None) -> Union[str, ProfileReport]:
+    def generate_reports(self, nuts_ids: Union[List[str], str] = 'all', fmt: str = 'html', output_folder: str = None, if_exists: str = 'replace') -> Union[str, ProfileReport]:
         """
         Generate a JSON or HTML report of the data of the given nuts_ids.
 
@@ -316,6 +316,19 @@ class Bundesland(AbstractContextManager):
         # load the logo
         logo = _get_logo()
 
+        # check format to interrupt before report is generated
+        if fmt.lower() != 'object':
+            # build the path
+            if output_folder is None:
+                output_folder = os.path.join(self.base_path, 'reports')
+            
+            # build the filename
+            filename = os.path.join(output_folder, f"{nuts_id}.{fmt.lower()}")
+
+            # check if the output location exists
+            if not os.path.exists(output_folder):
+                os.makedirs(output_folder)
+
         # instantiate all reports
         for nuts_id in nuts_ids:
             try:
@@ -334,16 +347,14 @@ class Bundesland(AbstractContextManager):
         if fmt.lower() == 'object':
             return reports
         
-        # in any other case we need the path
-        # build the path
-        if output_folder is None:
-            output_folder = os.path.join(self.base_path, 'reports')
-        
-        # check if the output location exists
-        if not os.path.exists(output_folder):
-            os.makedirs(output_folder)
-        
         # save all
         for report, nuts_id in zip(reports, used_ids):
-            report.to_file(os.path.join(output_folder, f"{nuts_id}.{fmt.lower()}"))
-        
+            # check if the file already exists
+            if os.path.exists(filename):
+                if if_exists == 'raise':
+                    raise FileExistsError(f"{filename} already exists and if_exists policy is 'raise'")
+                elif if_exists == 'omit' or if_exists == 'skip':
+                    continue
+            
+            # if not aborted, create or replace the file
+            report.to_file(filename)
