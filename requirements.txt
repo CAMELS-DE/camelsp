@@ -1,2 +1,4 @@
 pandas
 dateparser
+dask
+pandas-profiling
