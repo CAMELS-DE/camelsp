@@ -8,8 +8,9 @@ import warnings
 import shutil
 
 import pandas as pd
+from pandas_profiling import ProfileReport
 
-from .util import nuts, get_output_path, BASEPATH, get_input_path, get_full_nuts_mapping
+from .util import nuts, get_output_path, BASEPATH, get_input_path, get_full_nuts_mapping, _get_logo
 
 
 class Bundesland(AbstractContextManager):
@@ -256,3 +257,93 @@ class Bundesland(AbstractContextManager):
         merged.to_csv(spath, index=False, na_rep='NaN')
         
         return spath
+
+    def get_data(self, nuts_id: str, date_index: bool = True) -> pd.DataFrame:
+        """
+        Read the data from the output folder and return as pandas dataframe.
+        Pass the CAMELS-de nuts_id. If date_index is False, 'date' will be a
+        data column and a generic range-index is used.
+        """
+        # get the mapping
+        mapping = self.nuts_table
+
+        # check if nuts_id is actually a nuts_id or a provider_id
+        if nuts_id in mapping.provider_id.values:
+            provider_id = nuts_id
+            nuts_id = mapping.set_index('provider_id').loc[provider_id, 'nuts_id']
+            warnings.warn(f"{nuts_id} is a provider_id and not a CAMELS-de NUTSID. provider_id might have duplicates, using the first one: {nuts_id}")
+        
+        # build the path
+        path = os.path.join(self.output_path, nuts_id, f'{nuts_id}_data.csv')
+
+        # read in
+        df = pd.read_csv(path, parse_dates=['date'])
+
+        if date_index:
+            df.set_index('date', inplace=True)
+        
+        return df
+
+    def generate_reports(self, nuts_ids: Union[List[str], str] = 'all', fmt: str = 'html', output_folder: str = None) -> Union[str, ProfileReport]:
+        """
+        Generate a JSON or HTML report of the data of the given nuts_ids.
+
+        Parameter
+        ---------
+        nuts_ids : list, str
+            Either a string (CAMELS-DE ID) or a list of strings. Additionally,
+            the the string literal 'all' is accepted, to look up all IDs.
+        fmt : str
+            Return format. Can be 'html', 'json', 'object'. If Object, a 
+            pandas_profiling.ProfileReport is returned. In any other case the
+            respective file is written into the output folder
+        output_folder : str, optional
+            Alternative output location. The default location is the 
+            'report' folder in the base output location.
+        """
+        # get all nuts ids
+        if nuts_ids == 'all':
+            nuts_ids = self.nuts_table.nuts_id.values.tolist()
+        
+        # if only one nuts_id, make it iterable
+        if isinstance(nuts_ids, str):
+            nuts_ids = [nuts_ids]
+        
+        # reports container
+        reports = []
+        used_ids = []
+
+        # load the logo
+        logo = _get_logo()
+
+        # instantiate all reports
+        for nuts_id in nuts_ids:
+            try:
+                df = self.get_data(nuts_id, date_index=False)
+            except FileNotFoundError:
+                warnings.warn(f"ID: {nuts_id} has no data")
+                continue
+            
+            # instantiate the report
+            #report = ProfileReport(df=df, title=nuts_id)
+            report = df.profile_report(html={'style': {'logo': logo, 'theme': 'flatly'}}, progress_bar=False, title=nuts_id)
+            reports.append(report)
+            used_ids.append(nuts_id)
+        
+        # check the format type
+        if fmt.lower() == 'object':
+            return reports
+        
+        # in any other case we need the path
+        # build the path
+        if output_folder is None:
+            output_folder = os.path.join(self.base_path, 'reports')
+        
+        # check if the output location exists
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder)
+        
+        # save all
+        for report, nuts_id in zip(reports, used_ids):
+            report.to_file(os.path.join(output_folder, f"{nuts_id}.{fmt.lower()}"))
+        

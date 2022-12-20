@@ -12,6 +12,11 @@ INPUT_PATH = os.environ.get('INPUT_DIR', _DEFAULT_INPUT_PATH)
 OUTPUT_PATH = os.environ.get('OUTPUT_DIR', _DEFAULT_OUTPUT_PATH)
 
 
+def _get_logo():
+    with open(os.path.join(BASEPATH, 'logo.bin'), 'r') as f:
+        return f"data:image/png;base64,{f.read()}"
+
+
 # helper 
 __BL_TRANS = {
     'bw': 'bw',
@@ -101,7 +106,12 @@ _INPUT_DEFAULT_PATHS = dict(
 
 def nuts(key: str) -> str:
     short = __BL_TRANS.get(key.lower(), key.lower())
-    return _NUTS[short]
+    if short in _NUTS.keys():
+        return _NUTS[short]
+    elif short.upper() in _NUTS.values():
+        return short.upper()
+    else:
+        raise IndexError(f"No idea what {key} should translate to")
 
 
 def get_output_path(bl: str = None):
