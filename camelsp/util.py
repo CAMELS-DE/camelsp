@@ -101,7 +101,12 @@ _INPUT_DEFAULT_PATHS = dict(
 
 def nuts(key: str) -> str:
     short = __BL_TRANS.get(key.lower(), key.lower())
-    return _NUTS[short]
+    if short in _NUTS.keys():
+        return _NUTS[short]
+    elif short.upper() in _NUTS.values():
+        return short.upper()
+    else:
+        raise IndexError(f"No idea what {key} should translate to")
 
 
 def get_output_path(bl: str = None):
