@@ -10,7 +10,7 @@ import shutil
 import pandas as pd
 from pandas_profiling import ProfileReport
 
-from .util import nuts, get_output_path, BASEPATH, get_input_path, get_full_nuts_mapping, _get_logo
+from .util import nuts, get_output_path, BASEPATH, get_input_path, get_full_nuts_mapping, _get_logo, _NUTS_LVL2_NAMES
 
 
 class Bundesland(AbstractContextManager):
@@ -18,6 +18,7 @@ class Bundesland(AbstractContextManager):
     def __init__(self, bl: str):
         # set the Bundesland
         self.NUTS = nuts(bl)
+        self.name = _NUTS_LVL2_NAMES[self.NUTS]
 
         # set output path
         self.base_path = get_output_path()

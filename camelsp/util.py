@@ -104,6 +104,25 @@ _INPUT_DEFAULT_PATHS = dict(
 )
 
 
+_NUTS_LVL2_NAMES = dict(
+    DE1='Baden-Württemberg',
+    DE2='Bayern',
+    DE3='Berlin',
+    DE4='Brandenburg',
+    DE5='Bremen',
+    DE6='Hamburg',
+    DE7='Hessen',
+    DE8='Mecklenburg Vorpommern',
+    DE9='Niedersachsen',
+    DEA='Nordrhein-Westfalen',
+    DEB='Rheinland-Pfalz',
+    DEC='Saarland',
+    DED='Sachsen',
+    DEE='Sachsen-Anhalt',
+    DEF='Schleswig-Holstein',
+    DEG='Thüringen'
+)
+
 def nuts(key: str) -> str:
     short = __BL_TRANS.get(key.lower(), key.lower())
     if short in _NUTS.keys():
