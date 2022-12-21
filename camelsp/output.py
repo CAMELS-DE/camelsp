@@ -10,7 +10,7 @@ import shutil
 import pandas as pd
 from pandas_profiling import ProfileReport
 
-from .util import nuts, get_output_path, BASEPATH, get_input_path, get_full_nuts_mapping, _get_logo, _NUTS_LVL2_NAMES
+from .util import nuts, get_output_path, BASEPATH, get_input_path, get_full_nuts_mapping, _get_logo, _NUTS_LVL2_NAMES, get_metadata
 
 
 class Bundesland(AbstractContextManager):
@@ -105,6 +105,18 @@ class Bundesland(AbstractContextManager):
         # generate a csv for Michi Stoelzle ;)
         df = pd.DataFrame(mapping)
         df.to_csv(os.path.join(self.meta_path, 'nuts_mapping.csv'), index=False)
+
+    @property
+    def metadata(self) -> pd.DataFrame:
+        # get all metadata
+        meta = get_metadata(self.base_path)
+        
+        # filter for this BL
+        return meta.where(meta.nuts_lvl2 == self.NUTS).dropna(axis=0, how='all')
+    
+    @metadata.setter
+    def metadata(self, new_metadata: pd.DataFrame):
+        raise NotImplementedError
 
     def save_warnings(self, warns: List[warnings.WarningMessage]) -> str:
         """
