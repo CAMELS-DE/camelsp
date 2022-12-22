@@ -192,7 +192,7 @@ def get_metadata(base_path = OUTPUT_PATH) -> pd.DataFrame:
     path = os.path.join(base_path, 'metadata', 'metadata.csv')
 
     if os.path.exists(path):
-        return pd.read_csv(path).set_index('camels_id')
+        return pd.read_csv(path)
     else:
         # generate
         mapping =  get_full_nuts_mapping(base_path=base_path, format='df')
@@ -200,8 +200,11 @@ def get_metadata(base_path = OUTPUT_PATH) -> pd.DataFrame:
         # rename header
         mapping.columns = ['camels_id', 'provider_id', 'camels_path']
 
+        # bugfix for early stages of the mapping
+        mapping['provider_id'] = mapping.provider_id.astype(str)
+
         # some extra columns for convenience
         mapping['nuts_lvl2'] = [nid[:3] for nid in mapping.camels_id]
         mapping['federal_state'] = [_NUTS_LVL2_NAMES[nid[:3]] for nid in mapping.camels_id]
 
-        return mapping.set_index('camels_id')
+        return mapping
