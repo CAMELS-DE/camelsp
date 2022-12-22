@@ -104,6 +104,25 @@ _INPUT_DEFAULT_PATHS = dict(
 )
 
 
+_NUTS_LVL2_NAMES = dict(
+    DE1='Baden-Württemberg',
+    DE2='Bayern',
+    DE3='Berlin',
+    DE4='Brandenburg',
+    DE5='Bremen',
+    DE6='Hamburg',
+    DE7='Hessen',
+    DE8='Mecklenburg Vorpommern',
+    DE9='Niedersachsen',
+    DEA='Nordrhein-Westfalen',
+    DEB='Rheinland-Pfalz',
+    DEC='Saarland',
+    DED='Sachsen',
+    DEE='Sachsen-Anhalt',
+    DEF='Schleswig-Holstein',
+    DEG='Thüringen'
+)
+
 def nuts(key: str) -> str:
     short = __BL_TRANS.get(key.lower(), key.lower())
     if short in _NUTS.keys():
@@ -148,7 +167,7 @@ def get_input_path(bl: str = None):
 
 
 def get_full_nuts_mapping(base_path = OUTPUT_PATH, format='json'):
-    """Get the NUTS mapping to provider_di for ALL states"""
+    """Get the NUTS mapping to provider_id for ALL states"""
     # build file name
     fname = os.path.join(base_path, 'metadata', 'nuts_mapping.json')
 
@@ -165,3 +184,27 @@ def get_full_nuts_mapping(base_path = OUTPUT_PATH, format='json'):
         return js
     elif format.lower() in ('csv', 'df', 'dataframe'):
         return pd.DataFrame(js)
+
+
+def get_metadata(base_path = OUTPUT_PATH) -> pd.DataFrame:
+    """Get the current state of overall metadata"""
+    # get the path
+    path = os.path.join(base_path, 'metadata', 'metadata.csv')
+
+    if os.path.exists(path):
+        return pd.read_csv(path)
+    else:
+        # generate
+        mapping =  get_full_nuts_mapping(base_path=base_path, format='df')
+        
+        # rename header
+        mapping.columns = ['camels_id', 'provider_id', 'camels_path']
+
+        # bugfix for early stages of the mapping
+        mapping['provider_id'] = mapping.provider_id.astype(str)
+
+        # some extra columns for convenience
+        mapping['nuts_lvl2'] = [nid[:3] for nid in mapping.camels_id]
+        mapping['federal_state'] = [_NUTS_LVL2_NAMES[nid[:3]] for nid in mapping.camels_id]
+
+        return mapping

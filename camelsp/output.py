@@ -8,9 +8,10 @@ import warnings
 import shutil
 
 import pandas as pd
+import numpy as np
 from pandas_profiling import ProfileReport
 
-from .util import nuts, get_output_path, BASEPATH, get_input_path, get_full_nuts_mapping, _get_logo
+from .util import nuts, get_output_path, BASEPATH, get_input_path, get_full_nuts_mapping, _get_logo, _NUTS_LVL2_NAMES, get_metadata
 
 
 class Bundesland(AbstractContextManager):
@@ -18,6 +19,7 @@ class Bundesland(AbstractContextManager):
     def __init__(self, bl: str):
         # set the Bundesland
         self.NUTS = nuts(bl)
+        self.name = _NUTS_LVL2_NAMES[self.NUTS]
 
         # set output path
         self.base_path = get_output_path()
@@ -104,6 +106,50 @@ class Bundesland(AbstractContextManager):
         # generate a csv for Michi Stoelzle ;)
         df = pd.DataFrame(mapping)
         df.to_csv(os.path.join(self.meta_path, 'nuts_mapping.csv'), index=False)
+
+    @property
+    def metadata(self) -> pd.DataFrame:
+        # get all metadata
+        meta = get_metadata(self.base_path)
+        
+        # filter for this BL
+        return meta.where(meta.nuts_lvl2 == self.NUTS).dropna(axis=0, how='all')
+    
+    @metadata.setter
+    def metadata(self, new_metadata: pd.DataFrame):
+        if 'provider_id' in new_metadata.columns and not 'camels_id' in new_metadata.columns:
+            self.update_metadata(new_metadata=new_metadata, id_column='provider_id')
+        else:
+            self.update_metadata(new_metadata=new_metadata)
+    
+    def update_metadata(self, new_metadata: pd.DataFrame, id_column: str = 'camels_id'):
+        # get metadata
+        metadata = get_metadata(self.base_path)
+
+        # check id_column is present
+        if id_column not in new_metadata.columns:
+            raise AttributeError(f'new_metadata does not have a {id_column} to join on.')
+        if id_column not in metadata:
+            raise AttributeError(f'Existing metadata does not have a {id_column} to join on. Found only: {metadata.columns.to_list()}')
+
+        # add the new columns, if not there
+        for col in new_metadata.columns:
+            if col not in metadata.columns:
+                metadata[col] = np.NaN
+        
+        # try to set the id_column as index the metadata
+        metadata.set_index(id_column, inplace=True)
+
+        # use strings to join
+        new_metadata[id_column] = new_metadata[id_column].astype(str)
+
+        # update with the new metadata
+        metadata.update(new_metadata.set_index(id_column))
+        metadata.reset_index(inplace=True)
+
+        # overwrite the metadata
+        path = os.path.join(self.base_path, 'metadata', 'metadata.csv')
+        metadata.to_csv(path, index=False)
 
     def save_warnings(self, warns: List[warnings.WarningMessage]) -> str:
         """
