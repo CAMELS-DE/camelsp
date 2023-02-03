@@ -11,7 +11,7 @@ import pandas as pd
 import numpy as np
 from pandas_profiling import ProfileReport
 
-from .util import nuts, get_output_path, BASEPATH, get_input_path, get_full_nuts_mapping, _get_logo, _NUTS_LVL2_NAMES, get_metadata
+from .util import nuts, get_output_path, BASEPATH, get_input_path, get_full_nuts_mapping, _get_logo, _NUTS_LVL2_NAMES, get_metadata, update_metadata
 
 
 class Bundesland(AbstractContextManager):
@@ -123,33 +123,7 @@ class Bundesland(AbstractContextManager):
             self.update_metadata(new_metadata=new_metadata)
     
     def update_metadata(self, new_metadata: pd.DataFrame, id_column: str = 'camels_id'):
-        # get metadata
-        metadata = get_metadata(self.base_path)
-
-        # check id_column is present
-        if id_column not in new_metadata.columns:
-            raise AttributeError(f'new_metadata does not have a {id_column} to join on.')
-        if id_column not in metadata:
-            raise AttributeError(f'Existing metadata does not have a {id_column} to join on. Found only: {metadata.columns.to_list()}')
-
-        # add the new columns, if not there
-        for col in new_metadata.columns:
-            if col not in metadata.columns:
-                metadata[col] = np.NaN
-        
-        # try to set the id_column as index the metadata
-        metadata.set_index(id_column, inplace=True)
-
-        # use strings to join
-        new_metadata[id_column] = new_metadata[id_column].astype(str)
-
-        # update with the new metadata
-        metadata.update(new_metadata.set_index(id_column))
-        metadata.reset_index(inplace=True)
-
-        # overwrite the metadata
-        path = os.path.join(self.base_path, 'metadata', 'metadata.csv')
-        metadata.to_csv(path, index=False)
+        update_metadata(new_metadata, id_column=id_column)
 
     def save_warnings(self, warns: List[warnings.WarningMessage]) -> str:
         """
