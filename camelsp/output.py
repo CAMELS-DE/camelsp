@@ -125,12 +125,12 @@ class Bundesland(AbstractContextManager):
     def update_metadata(self, new_metadata: pd.DataFrame, id_column: str = 'camels_id'):
         update_metadata(new_metadata, id_column=id_column)
 
-    def save_warnings(self, warns: List[warnings.WarningMessage]) -> str:
+    def save_warnings(self, warns: List[warnings.WarningMessage], posfix: str = '') -> str:
         """
         Create a error log in the metadata directory for the current BL.
         """
         # get the path
-        path = os.path.join(self.meta_path, f"{self.NUTS}_error.log")
+        path = os.path.join(self.meta_path, f"{self.NUTS}_error{posfix}.log")
 
         # write a log - overwrite if it already exists
         with open(path, 'w') as f:
