@@ -2,6 +2,7 @@ from typing import Dict
 import os
 import json 
 import pandas as pd
+import numpy as np
 
 # This package is intended to be installed along with the data folder
 BASEPATH = os.path.abspath(os.path.dirname(__file__))
@@ -208,3 +209,46 @@ def get_metadata(base_path = OUTPUT_PATH) -> pd.DataFrame:
         mapping['federal_state'] = [_NUTS_LVL2_NAMES[nid[:3]] for nid in mapping.camels_id]
 
         return mapping
+
+
+def update_metadata(new_metadata: pd.DataFrame, base_path = OUTPUT_PATH, id_column: str = None):
+    """
+    Update the the full metadata table using a update dataframe.
+    The new dataframe as to include either the camels_id or the provider_id and that
+    will be used for updateing. The new_metadata DataFrame may be smaller as the full 
+    table. Existing columns will be updated, missing columns will be added and filled with
+    NA for all IDs that are not present in new_metadata.
+    If index_col is not provided
+    """
+    # get metadata
+    metadata = get_metadata(base_path=base_path)
+    
+    if new_metadata.index.name in ['provider_id', 'camels_id', id_column if id_column is not None else 'FOOBAR']:
+        new_metadata.reset_index(inplace=True)
+
+    # check id column
+    if id_column is None:
+        if 'camels_id' in new_metadata.columns:
+            id_column = 'camels_id'
+        elif 'provider_id' in new_metadata.columns:
+            id_column = 'provider_id'
+    
+    # check id_column
+    if id_column is None:
+        raise AttributeError("You need to specify the id_column, or 'camels_id' or 'provider_id' has to be present.")
+    
+    # update none existing columns
+    for col in new_metadata.columns:
+        if col not in metadata.columns:
+            metadata[col] = np.NaN
+    
+    # try to set the id_column as index
+    metadata.set_index(id_column, inplace=True)
+
+    # update
+    metadata.update(new_metadata.set_index(id_column))
+    metadata.reset_index(inplace=True)
+
+    # overwrite
+    path = os.path.join(base_path, 'metadata', 'metadata.csv')
+    metadata.to_csv(path, index=False)
