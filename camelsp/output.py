@@ -497,22 +497,80 @@ class Bundesland(AbstractContextManager):
         
 
     @property
-    def input_hash(self) -> dict:
+    def input_hash(self):
         """
-        Get the SHA256 hash sum of all input files of the Bundesland.
-    
-        This method calculates the SHA256 hash sum for each input file within the 
-        Bundesland's input path.
-        The hash sum provides a convenient way to check if the input data has 
-        changed.
-        
-        Returns
-        -------
-        out: dictionary mapping input file names to their corresponding SHA256 hash sums.
+        Calculate the SHA256 hash sum of all input files within the Bundesland's input path.
+
+        The hash sum is calculated based on the hash sums of the individual input files.
+        This property provides a convenient way to check if the input data has changed.
+
+        Returns:
+        ---------
+        hsum: str
+            The SHA256 hash sum of all input files within the Bundesland's input path.
         
         """
         # get filenames in input_path directory
         fnames = glob.glob(f"{self.input_path}/*")
+
+        # get hash sum dictionary for files in input_path 
+        out = self.gethash(fnames)
+
+        # calculate hash sum of hash sum dictionary
+        hsum = hashlib.sha256(str(out).encode()).hexdigest()
+
+        return hsum
+    
+
+    @property
+    def output_hash(self):
+        """
+        Calculate the SHA256 hash sum of all input files within the Bundesland's input path.
+
+        The hash sum is calculated based on the hash sums of the individual input files.
+        This property provides a convenient way to check if the input data has changed.
+
+        Returns:
+        ---------
+        hsum: str
+            The SHA256 hash sum of all input files within the Bundesland's input path.
+        
+        """
+        # get filenames in input_path directory
+        fnames = glob.glob(f"{self.output_path}/*")
+
+        # get hash sum dictionary for files in input_path 
+        out = self.gethash(fnames)
+
+        # calculate hash sum of hash sum dictionary
+        hsum = hashlib.sha256(str(out).encode()).hexdigest()
+
+        return hsum
+
+
+    @classmethod
+    def gethash(cls, fnames: List[str]) -> dict:
+        """
+        Get the SHA256 hash sum for a given list of data.
+
+        This method calculates the SHA256 hash sum for each file specified in the provided 
+        list fnames.
+        The hash sum provides a convenient way to check if the data has changed.
+
+
+        Parameter
+        ---------
+        fnames: list
+            List of filenames to calculate the hash sum for. 
+        
+        Returns
+        -------
+        out: dict
+            Dictionary mapping files to their corresponding SHA256 hash sums.
+        
+        """
+        # sort filenames alphabetically
+        fnames = sorted(fnames)
 
         out = {}
 
@@ -527,10 +585,10 @@ class Bundesland(AbstractContextManager):
                 fstream.write(f.read())
                 fstream.seek(0)
             
-            # calculate hashsum for file content
+            # calculate hash sum for file content
             hsum = hashlib.sha256(fstream.read()).hexdigest()
 
-            # store hashsum to output dictionary
+            # store hash sum to output dictionary
             out[fname] = hsum
 
         return out
