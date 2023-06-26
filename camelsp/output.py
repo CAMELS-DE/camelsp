@@ -513,6 +513,9 @@ class Bundesland(AbstractContextManager):
         # get filenames in input_path directory
         fnames = glob.glob(f"{self.input_path}/*")
 
+        # sort filenames alphabetically
+        fnames = sorted(fnames)
+
         # get hash sum dictionary for files in input_path 
         out = self.gethash(fnames)
 
@@ -538,6 +541,9 @@ class Bundesland(AbstractContextManager):
         """
         # get filenames in input_path directory
         fnames = glob.glob(f"{self.output_path}/*")
+
+        # sort filenames
+        fnames = sorted(fnames)
 
         # get hash sum dictionary for files in input_path 
         out = self.gethash(fnames)
