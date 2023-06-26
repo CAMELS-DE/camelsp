@@ -6,6 +6,9 @@ import os
 import json
 import warnings
 import shutil
+import glob
+import io
+import hashlib
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -395,102 +398,139 @@ class Bundesland(AbstractContextManager):
             return reports
 
     def generate_scatter_plots(self, nuts_ids: Union[List[str], str] = 'all', fmt: str = 'png', output_folder: str = None, if_exists: str = 'replace') -> Union[None, List[plt.Figure]]:
-            """
-            Generates scatterplots of the data of the given nuts_ids.
+        """
+        Generates scatterplots of the data of the given nuts_ids.
 
-            Parameter
-            ---------
-            nuts_ids : list, str
-                Either a string (CAMELS-DE ID) or a list of strings. Additionally,
-                the the string literal 'all' is accepted, to look up all IDs.
-            fmt : str
-                Return format. Can be 'png', 'svg', 'pdf' or 'object'. If object, a 
-                (list of) matplotlib.figure.Figure is returned. In any other case the
-                respective file is written into the output folder
-            output_folder : str, optional
-                Alternative output location. The default location is the 
-                'report' folder in the base output location.
-            """
-            # get all nuts ids
-            if nuts_ids == 'all':
-                nuts_ids = self.nuts_table.nuts_id.values.tolist()
+        Parameter
+        ---------
+        nuts_ids : list, str
+            Either a string (CAMELS-DE ID) or a list of strings. Additionally,
+            the the string literal 'all' is accepted, to look up all IDs.
+        fmt : str
+            Return format. Can be 'png', 'svg', 'pdf' or 'object'. If object, a 
+            (list of) matplotlib.figure.Figure is returned. In any other case the
+            respective file is written into the output folder
+        output_folder : str, optional
+            Alternative output location. The default location is the 
+            'report' folder in the base output location.
+        """
+        # get all nuts ids
+        if nuts_ids == 'all':
+            nuts_ids = self.nuts_table.nuts_id.values.tolist()
 
-            # if only one nuts_id, make it iterable
-            if isinstance(nuts_ids, str):
-                nuts_ids = [nuts_ids]
+        # if only one nuts_id, make it iterable
+        if isinstance(nuts_ids, str):
+            nuts_ids = [nuts_ids]
 
-            # reports container
-            scatter_plots = {}
-            if fmt.lower() in ['pdf','svg']:
-                warnings.warn(f"Using {fmt} format leads to large files, since every single point is included in the file. Consider using png.")
+        # reports container
+        scatter_plots = {}
+        if fmt.lower() in ['pdf','svg']:
+            warnings.warn(f"Using {fmt} format leads to large files, since every single point is included in the file. Consider using png.")
 
-            # check format to interrupt before report is generated
+        # check format to interrupt before report is generated
+        if fmt.lower() != 'object':
+            # build the path
+            if output_folder is None:
+                output_folder = os.path.join(self.base_path, 'scatter_plots')
+            # check if the output location exists
+            if not os.path.exists(output_folder):
+                os.makedirs(output_folder)
+
+        # instantiate all plots
+        n = len(nuts_ids)
+        for i,nuts_id in enumerate(nuts_ids): # TODO maybe refactor to use tqdm in outer loop instead?
+            print(f"{i:<4}/{n}",end='\r')
+            # before reading data raise or skip if we already have the plot
             if fmt.lower() != 'object':
-                # build the path
-                if output_folder is None:
-                    output_folder = os.path.join(self.base_path, 'scatter_plots')
-                # check if the output location exists
-                if not os.path.exists(output_folder):
-                    os.makedirs(output_folder)
+                filename = os.path.join(output_folder, f"{nuts_id}.{fmt.lower()}")
+                # check if the file already exists
+                if os.path.exists(filename):
+                    if if_exists == 'raise':
+                        raise FileExistsError(f"{filename} already exists and if_exists policy is 'raise'")
+                    elif if_exists == 'omit' or if_exists == 'skip':
+                        continue
 
-            # instantiate all plots
-            n = len(nuts_ids)
-            for i,nuts_id in enumerate(nuts_ids): # TODO maybe refactor to use tqdm in outer loop instead?
-                print(f"{i:<4}/{n}",end='\r')
-                # before reading data raise or skip if we already have the plot
-                if fmt.lower() != 'object':
-                    filename = os.path.join(output_folder, f"{nuts_id}.{fmt.lower()}")
-                    # check if the file already exists
-                    if os.path.exists(filename):
-                        if if_exists == 'raise':
-                            raise FileExistsError(f"{filename} already exists and if_exists policy is 'raise'")
-                        elif if_exists == 'omit' or if_exists == 'skip':
-                            continue
-
-                # load the data
-                try:
-                    df = self.get_data(nuts_id)
-                        
-                except FileNotFoundError:
-                    warnings.warn(f"ID: {nuts_id} has no data")
-                    continue
-
-                # Replace -999 with NaN, -999 is sometimes used to indicate invalid values
-                df_nan = df.replace(-999, np.NaN)
-                
-                # Can't make a scatterplot, if we never have both q and w values
-                overlap = ((~df_nan['q'].isna()) & (~df_nan['w'].isna())).sum()
-                
-                if overlap == 0:
-                    warnings.warn(f"{nuts_id} - Q and W were never measured at the same time.")
-                else:
+            # load the data
+            try:
+                df = self.get_data(nuts_id)
                     
-                    #Generate the plot
-                    fig, ax = plt.subplots()
-                    scatter = ax.scatter(df_nan['q'], df_nan['w'], c=df_nan.index.year)
-                    legend1 = ax.legend(*scatter.legend_elements(),loc="lower right", title="Year")
-                    ax.add_artist(legend1)
-                    ax.set_title(nuts_id)
-                    ax.grid(True)
-                    ax.set_xlabel('q')
-                    ax.set_ylabel('w')
-                    fig.tight_layout()
+            except FileNotFoundError:
+                warnings.warn(f"ID: {nuts_id} has no data")
+                continue
 
-                    # if return, then append to list
-                    if fmt.lower() == 'object':
-                        scatter_plots[nuts_id] = fig
+            # Replace -999 with NaN, -999 is sometimes used to indicate invalid values
+            df_nan = df.replace(-999, np.NaN)
+            
+            # Can't make a scatterplot, if we never have both q and w values
+            overlap = ((~df_nan['q'].isna()) & (~df_nan['w'].isna())).sum()
+            
+            if overlap == 0:
+                warnings.warn(f"{nuts_id} - Q and W were never measured at the same time.")
+            else:
+                
+                #Generate the plot
+                fig, ax = plt.subplots()
+                scatter = ax.scatter(df_nan['q'], df_nan['w'], c=df_nan.index.year)
+                legend1 = ax.legend(*scatter.legend_elements(),loc="lower right", title="Year")
+                ax.add_artist(legend1)
+                ax.set_title(nuts_id)
+                ax.grid(True)
+                ax.set_xlabel('q')
+                ax.set_ylabel('w')
+                fig.tight_layout()
 
-                    #else write a file
-                    else:
-                        plt.savefig(filename, dpi='figure') #TODO metadata with ID, Gaugename etc. Needs a way to access more metadata
-                        # clear memory after saving
-                        fig.clear()
-                        plt.close(fig)
+                # if return, then append to list
+                if fmt.lower() == 'object':
+                    scatter_plots[nuts_id] = fig
 
-            # check the format type
-            if fmt.lower() == 'object':
-                return scatter_plots
-            return None
+                #else write a file
+                else:
+                    plt.savefig(filename, dpi='figure') #TODO metadata with ID, Gaugename etc. Needs a way to access more metadata
+                    # clear memory after saving
+                    fig.clear()
+                    plt.close(fig)
+
+        # check the format type
+        if fmt.lower() == 'object':
+            return scatter_plots
+        return None
         
-        
 
+    @property
+    def input_hash(self) -> dict:
+        """
+        Get the SHA256 hash sum of all input files of the Bundesland.
+    
+        This method calculates the SHA256 hash sum for each input file within the 
+        Bundesland's input path.
+        The hash sum provides a convenient way to check if the input data has 
+        changed.
+        
+        Returns
+        -------
+        out: dictionary mapping input file names to their corresponding SHA256 hash sums.
+        
+        """
+        # get filenames in input_path directory
+        fnames = glob.glob(f"{self.input_path}/*")
+
+        out = {}
+
+        for fname in fnames:
+            # exclude directories
+            if os.path.isdir(fname):
+                continue
+            
+            # open the file
+            with open(fname, 'rb') as f:
+                fstream = io.BytesIO()
+                fstream.write(f.read())
+                fstream.seek(0)
+            
+            # calculate hashsum for file content
+            hsum = hashlib.sha256(fstream.read()).hexdigest()
+
+            # store hashsum to output dictionary
+            out[fname] = hsum
+
+        return out
