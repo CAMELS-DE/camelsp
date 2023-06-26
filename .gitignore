@@ -132,3 +132,6 @@ dmypy.json
 gfz
 input_data/*
 output_data/*
+
+# ignore notebooks in playground
+playground/*.ipynb
