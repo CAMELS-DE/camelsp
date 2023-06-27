@@ -2,3 +2,4 @@ pandas
 dateparser
 dask
 pandas-profiling
+patoolib
