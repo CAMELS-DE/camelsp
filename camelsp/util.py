@@ -99,7 +99,7 @@ _INPUT_DEFAULT_PATHS = dict(
     DEB='RLP_Rheinland-Pfalz',
     DEC='SL_Saarland',
     DED='SN_Sachsen',
-    DEE='SA_Sachsen-Anhalt/TagMittel_DGJ_20221007',
+    DEE='SA_Sachsen-Anhalt',
     DEF='SH_Schleswig-Holstein',
     DEG='TH_Thueringen'
 )
