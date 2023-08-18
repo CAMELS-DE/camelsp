@@ -313,7 +313,7 @@ class Bundesland(AbstractContextManager):
         path = os.path.join(self.output_path, nuts_id, f'{nuts_id}_data.csv')
 
         # read in
-        df = pd.read_csv(path, parse_dates=['date'])
+        df = pd.read_csv(path, parse_dates=['date'], dtype={'q': float, 'q_flag': 'boolean', 'w': float, 'w_flag': 'boolean'})
 
         if date_index:
             df.set_index('date', inplace=True)
