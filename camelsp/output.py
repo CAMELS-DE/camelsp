@@ -383,7 +383,9 @@ class Bundesland(AbstractContextManager):
 
             # instantiate the report
             #report = ProfileReport(df=df, title=nuts_id)
-            report = df.profile_report(html={'style': {'logo': logo, 'theme': 'flatly'}}, progress_bar=False, title=nuts_id)
+            report = df.profile_report(html={'style': {'logo': logo, 'theme': 'flatly'}}, progress_bar=False, title=nuts_id, 
+                                       correlations={"pearson": {"calculate": True},
+                                                     "spearman": {"calculate": True}})
             
             # if return, then append to container
             if fmt.lower() == 'object':
