@@ -172,13 +172,14 @@ def get_full_nuts_mapping(base_path = OUTPUT_PATH, format='json'):
     # build file name
     fname = os.path.join(base_path, 'metadata', 'nuts_mapping.json')
 
-    # check if exists
+    # if nuts_mapping does not exist, create empty mapping
     if not os.path.exists(fname):
-        raise FileNotFoundError(f"Can't find the nuts_mapping at {fname}")
-    
-    # read
-    with open(fname, 'r') as f:
-        js = json.load(f)
+        js = [{}]
+        print(f"Can't find the nuts_mapping at {fname}, returning empty mapping.")
+    # nuts_mapping exists: read
+    else:
+        with open(fname, 'r') as f:
+            js = json.load(f)
     
     # return
     if format.lower() == 'json':

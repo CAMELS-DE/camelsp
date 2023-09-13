@@ -100,8 +100,13 @@ class Bundesland(AbstractContextManager):
         # here we need to load all nuts
         all_nuts = get_full_nuts_mapping(self.base_path, format='json')
 
-        # get the current nuts mapping, but filter the new_nuts
-        mapping = new_nuts +  [c for c in all_nuts if c['nuts_id'] not in nuts_ids]
+        # if nuts mapping is empty, we can just save
+        if (len(all_nuts) == 1) and (len(all_nuts[0]) == 0):
+            mapping = new_nuts
+        # if nuts_mapping already exists, we need to filter the new nuts
+        else:
+            # get the current nuts mapping, but filter the new_nuts
+            mapping = new_nuts + [c for c in all_nuts if c['nuts_id'] not in nuts_ids]
 
         # save
         with open(os.path.join(self.meta_path, 'nuts_mapping.json'), 'w') as f:
