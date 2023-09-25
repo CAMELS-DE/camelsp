@@ -135,3 +135,6 @@ output_data/*
 
 # ignore notebooks in playground
 playground/*.ipynb
+
+# merit hydro
+merit_hydro/*
