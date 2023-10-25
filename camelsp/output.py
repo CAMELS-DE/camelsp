@@ -107,8 +107,10 @@ class Bundesland(AbstractContextManager):
         else:
             # get the current nuts mapping, but filter the new_nuts
             mapping = new_nuts + [c for c in all_nuts if c['nuts_id'] not in nuts_ids]
-
-        # save
+        
+        # save, create the directory and file if it does not exist
+        if not os.path.exists(self.meta_path):
+            os.makedirs(self.meta_path)
         with open(os.path.join(self.meta_path, 'nuts_mapping.json'), 'w') as f:
             json.dump(mapping, f, indent=4)
 
