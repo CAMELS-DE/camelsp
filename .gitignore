@@ -138,3 +138,6 @@ playground/*.ipynb
 
 # merit hydro
 merit_hydro/*
+
+# catchments pia
+catchments_pia/*
