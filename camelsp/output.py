@@ -622,6 +622,15 @@ class Station():
             The station id of the station to be handled.
         """
         # set the station id
+        # get the mapping
+        mapping = get_full_nuts_mapping(format='csv')
+
+        # check if camels_id is actually a camels_id or a provider_id
+        if camels_id in mapping.provider_id.values:
+            provider_id = camels_id
+            camels_id = mapping.set_index('provider_id').loc[provider_id, 'nuts_id']
+            warnings.warn(f"{provider_id} is a provider_id and not a CAMELS-DE NUTSID. provider_id might have duplicates, using the first one: {camels_id}")
+
         self.camels_id = camels_id
 
         # get and set the Bundesland
@@ -632,7 +641,27 @@ class Station():
         self.metadata = meta[meta.camels_id == camels_id]
         
         # set the output path
-        self.output_path = f'{get_output_path(self.bl.NUTS)}/{camels_id}'
+        self.output_path = os.path.join(self.bl.output_path, camels_id)
+
+        # set the data path
+        self.data_path = os.path.join(self.output_path, f'{camels_id}_data.csv')
 
         # get the nuts mapping
-        self.nuts_mapping = self.bl.nuts_table[self.bl.nuts_table.nuts_id == camels_id]
+        self.nuts_table = self.bl.nuts_table[self.bl.nuts_table.nuts_id == camels_id]
+
+
+    def get_data(self, date_index: bool = True) -> pd.DataFrame:
+        """
+        Read the data from the output folder and return as pandas dataframe.
+        Pass the CAMELS-DE nuts_id. 
+        If date_index is False, 'date' will be a
+        data column and a generic range-index is used.
+
+        """
+        # read in
+        df = pd.read_csv(self.data_path, parse_dates=['date'], dtype={'q': float, 'q_flag': 'boolean', 'w': float, 'w_flag': 'boolean'})
+
+        if date_index:
+            df.set_index('date', inplace=True)
+        
+        return df
