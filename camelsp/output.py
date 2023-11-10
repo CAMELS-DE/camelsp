@@ -607,3 +607,32 @@ class Bundesland(AbstractContextManager):
             out[fname] = hsum
 
         return out
+
+
+class Station():
+    """
+    Class for handling station data and metadata.
+
+    """
+    def __init__(self, camels_id: str):
+        """
+        Parameters
+        ----------
+        camels_od : str
+            The station id of the station to be handled.
+        """
+        # set the station id
+        self.camels_id = camels_id
+
+        # get and set the Bundesland
+        self.bl = Bundesland(camels_id[0:3])
+
+        # metadata
+        meta = self.bl.metadata
+        self.metadata = meta[meta.camels_id == camels_id]
+        
+        # set the output path
+        self.output_path = f'{get_output_path(self.bl.NUTS)}/{camels_id}'
+
+        # get the nuts mapping
+        self.nuts_mapping = self.bl.nuts_table[self.bl.nuts_table.nuts_id == camels_id]
