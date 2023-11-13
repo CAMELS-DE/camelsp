@@ -639,6 +639,13 @@ class Station():
         # metadata
         meta = self.bl.metadata
         self.metadata = meta[meta.camels_id == camels_id]
+
+        # name
+        self.name = self.metadata.gauge_name.values[0]
+
+        # location
+        self.lat = self.metadata.lat.values[0]
+        self.lon = self.metadata.lon.values[0]
         
         # set the output path
         self.output_path = os.path.join(self.bl.output_path, camels_id)
