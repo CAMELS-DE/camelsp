@@ -720,7 +720,7 @@ class Station():
         else:
             # check that only one row is included
             if len(catchment_geometry) != 1:
-                raise ValueError("catchment_geometry contains more than one geometries / rows for the station")
+                raise ValueError(f"catchment_geometry contains {len(catchment_geometry)} geometries / rows for the station, 1 is allowed")
 
         # get the nuts mapping
         camels_id = self.camels_id
