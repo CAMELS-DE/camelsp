@@ -651,17 +651,23 @@ class Station():
         # set the output path
         self.output_path = os.path.join(self.bl.output_path, camels_id)
 
-        # set the data path if data was already generated
+        # set the data path if data was already generated, else set to None
         if os.path.exists(os.path.join(self.output_path, f'{camels_id}_data.csv')):
             self.data_path = os.path.join(self.output_path, f'{camels_id}_data.csv')
+        else:
+            self.data_path = None
 
-        # set the merit hydro path if data was already generated
+        # set the merit hydro path if data was already generated, else set to None
         if os.path.exists(os.path.join(self.output_path, f'{camels_id}_merit_hydro_catchment.geojson')):
             self.merit_hydro_path = os.path.join(self.output_path, f'{camels_id}_merit_hydro_catchment.geojson')
+        else:
+            self.merit_hydro_path = None
 
-        # set the basis ezg path if data was already generated
+        # set the basis ezg path if data was already generated, else set to None
         if os.path.exists(os.path.join(self.output_path, f'{camels_id}_basis_ezg_catchment.geojson')):
             self.basis_ezg_path = os.path.join(self.output_path, f'{camels_id}_basis_ezg_catchment.geojson')
+        else:
+            self.basis_ezg_path = None
 
         # get the nuts mapping
         self.nuts_table = self.bl.nuts_table[self.bl.nuts_table.nuts_id == camels_id]
