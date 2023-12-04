@@ -626,20 +626,25 @@ class Station():
         # get the mapping
         mapping = get_full_nuts_mapping(format='csv')
 
+        # make sure that camels_id is a string
+        camels_id = str(camels_id)
+
         # check if camels_id is actually a camels_id or a provider_id
         if camels_id in mapping.provider_id.values:
             provider_id = camels_id
-            camels_id = mapping.set_index('provider_id').loc[provider_id, 'nuts_id']
+            self.camels_id = mapping.set_index('provider_id').loc[provider_id, 'nuts_id']
             warnings.warn(f"{provider_id} is a provider_id and not a CAMELS-DE NUTSID. provider_id might have duplicates, using the first one: {camels_id}")
-
-        self.camels_id = camels_id
+        elif camels_id in mapping.nuts_id.values:
+            self.camels_id = camels_id
+        else:
+            raise ValueError(f"{camels_id} is neither a provider_id nor a CAMELS-DE NUTSID")
 
         # get and set the Bundesland
-        self.bl = Bundesland(camels_id[0:3])
+        self.bl = Bundesland(self.camels_id[0:3])
 
         # metadata
         meta = self.bl.metadata
-        self.metadata = meta[meta.camels_id == camels_id]
+        self.metadata = meta[meta.camels_id == self.camels_id]
 
         # name
         self.name = self.metadata.gauge_name.values[0]
@@ -649,40 +654,40 @@ class Station():
         self.lon = self.metadata.lon.values[0]
         
         # set the output path
-        self.output_path = os.path.join(self.bl.output_path, camels_id)
+        self.output_path = os.path.join(self.bl.output_path, self.camels_id)
 
         # set the data path if data was already generated, else set to None
-        if os.path.exists(os.path.join(self.output_path, f'{camels_id}_data.csv')):
-            self.data_path = os.path.join(self.output_path, f'{camels_id}_data.csv')
+        if os.path.exists(os.path.join(self.output_path, f'{self.camels_id}_data.csv')):
+            self.data_path = os.path.join(self.output_path, f'{self.camels_id}_data.csv')
         else:
             self.data_path = None
         
         # set the federal agency path if data was already generated, else set to None
-        if os.path.exists(os.path.join(self.output_path, f'{camels_id}_federal_agency_catchment.geojson')):
-            self.federal_agency_path = os.path.join(self.output_path, f'{camels_id}_federal_agency_catchment.geojson')
+        if os.path.exists(os.path.join(self.output_path, f'{self.camels_id}_federal_agency_catchment.geojson')):
+            self.federal_agency_path = os.path.join(self.output_path, f'{self.camels_id}_federal_agency_catchment.geojson')
         else:
             self.federal_agency_path = None
 
         # set the merit hydro path if data was already generated, else set to None
-        if os.path.exists(os.path.join(self.output_path, f'{camels_id}_merit_hydro_catchment.geojson')):
-            self.merit_hydro_path = os.path.join(self.output_path, f'{camels_id}_merit_hydro_catchment.geojson')
+        if os.path.exists(os.path.join(self.output_path, f'{self.camels_id}_merit_hydro_catchment.geojson')):
+            self.merit_hydro_path = os.path.join(self.output_path, f'{self.camels_id}_merit_hydro_catchment.geojson')
         else:
             self.merit_hydro_path = None
 
         # set the basis ezg path if data was already generated, else set to None
-        if os.path.exists(os.path.join(self.output_path, f'{camels_id}_basis_ezg_catchment.geojson')):
-            self.basis_ezg_path = os.path.join(self.output_path, f'{camels_id}_basis_ezg_catchment.geojson')
+        if os.path.exists(os.path.join(self.output_path, f'{self.camels_id}_basis_ezg_catchment.geojson')):
+            self.basis_ezg_path = os.path.join(self.output_path, f'{self.camels_id}_basis_ezg_catchment.geojson')
         else:
             self.basis_ezg_path = None
 
         # set the hydrosheds path if data was already generated, else set to None
-        if os.path.exists(os.path.join(self.output_path, f'{camels_id}_hydrosheds_catchment.geojson')):
-            self.hydrosheds_path = os.path.join(self.output_path, f'{camels_id}_hydrosheds_catchment.geojson')
+        if os.path.exists(os.path.join(self.output_path, f'{self.camels_id}_hydrosheds_catchment.geojson')):
+            self.hydrosheds_path = os.path.join(self.output_path, f'{self.camels_id}_hydrosheds_catchment.geojson')
         else:
             self.hydrosheds_path = None
 
         # get the nuts mapping
-        self.nuts_table = self.bl.nuts_table[self.bl.nuts_table.nuts_id == camels_id]
+        self.nuts_table = self.bl.nuts_table[self.bl.nuts_table.nuts_id == self.camels_id]
 
 
     def get_data(self, date_index: bool = True) -> pd.DataFrame:
