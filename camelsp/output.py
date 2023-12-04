@@ -656,6 +656,12 @@ class Station():
             self.data_path = os.path.join(self.output_path, f'{camels_id}_data.csv')
         else:
             self.data_path = None
+        
+        # set the federal agency path if data was already generated, else set to None
+        if os.path.exists(os.path.join(self.output_path, f'{camels_id}_federal_agency_catchment.geojson')):
+            self.federal_agency_path = os.path.join(self.output_path, f'{camels_id}_federal_agency_catchment.geojson')
+        else:
+            self.federal_agency_path = None
 
         # set the merit hydro path if data was already generated, else set to None
         if os.path.exists(os.path.join(self.output_path, f'{camels_id}_merit_hydro_catchment.geojson')):
@@ -668,6 +674,12 @@ class Station():
             self.basis_ezg_path = os.path.join(self.output_path, f'{camels_id}_basis_ezg_catchment.geojson')
         else:
             self.basis_ezg_path = None
+
+        # set the hydrosheds path if data was already generated, else set to None
+        if os.path.exists(os.path.join(self.output_path, f'{camels_id}_hydrosheds_catchment.geojson')):
+            self.hydrosheds_path = os.path.join(self.output_path, f'{camels_id}_hydrosheds_catchment.geojson')
+        else:
+            self.hydrosheds_path = None
 
         # get the nuts mapping
         self.nuts_table = self.bl.nuts_table[self.bl.nuts_table.nuts_id == camels_id]
@@ -700,7 +712,8 @@ class Station():
             geopandas.GeoDataFrame with the geometry for the catchment of the 
             station, which will be saved as a geojson in the output folder.
         datasource : str
-            The datasource of the geometry. Can be 'merit_hydro' or 'basis_ezg'.
+            The datasource of the geometry. Can be 'federal_agency', 'merit_hydro', 
+            'basis_ezg' or 'hydrosheds'.
         if_exists : str
             The policy to handle existing files. Can be 'raise' or 'replace'.
         
@@ -711,8 +724,8 @@ class Station():
 
         """
         # check datasource
-        if datasource not in ['merit_hydro', 'basis_ezg']:
-            raise ValueError(f"datasource must be either 'merit_hydro' or 'basis_ezg', but is {datasource}")
+        if datasource not in ['federal_agency', 'merit_hydro', 'basis_ezg', 'hydrosheds']:
+            raise ValueError(f"datasource must be either 'federal_agency', 'merit_hydro', 'basis_ezg' or 'hydrosheds', but is {datasource}")
         
         # check catchment_geometry
         if not isinstance(catchment_geometry, gpd.GeoDataFrame):
