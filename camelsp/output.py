@@ -661,30 +661,6 @@ class Station():
             self.data_path = os.path.join(self.output_path, f'{self.camels_id}_data.csv')
         else:
             self.data_path = None
-        
-        # set the federal agency path if data was already generated, else set to None
-        if os.path.exists(os.path.join(self.output_path, f'{self.camels_id}_federal_agency_catchment.geojson')):
-            self.federal_agency_path = os.path.join(self.output_path, f'{self.camels_id}_federal_agency_catchment.geojson')
-        else:
-            self.federal_agency_path = None
-
-        # set the merit hydro path if data was already generated, else set to None
-        if os.path.exists(os.path.join(self.output_path, f'{self.camels_id}_merit_hydro_catchment.geojson')):
-            self.merit_hydro_path = os.path.join(self.output_path, f'{self.camels_id}_merit_hydro_catchment.geojson')
-        else:
-            self.merit_hydro_path = None
-
-        # set the basis ezg path if data was already generated, else set to None
-        if os.path.exists(os.path.join(self.output_path, f'{self.camels_id}_basis_ezg_catchment.geojson')):
-            self.basis_ezg_path = os.path.join(self.output_path, f'{self.camels_id}_basis_ezg_catchment.geojson')
-        else:
-            self.basis_ezg_path = None
-
-        # set the hydrosheds path if data was already generated, else set to None
-        if os.path.exists(os.path.join(self.output_path, f'{self.camels_id}_hydrosheds_catchment.geojson')):
-            self.hydrosheds_path = os.path.join(self.output_path, f'{self.camels_id}_hydrosheds_catchment.geojson')
-        else:
-            self.hydrosheds_path = None
 
         # get the nuts mapping
         self.nuts_table = self.bl.nuts_table[self.bl.nuts_table.nuts_id == self.camels_id]
@@ -717,7 +693,7 @@ class Station():
             geopandas.GeoDataFrame with the geometry for the catchment of the 
             station, which will be saved as a geojson in the output folder.
         datasource : str
-            The datasource of the geometry. Can be 'federal_agency', 'merit_hydro', 
+            The datasource of the geometry. Can be 'federal_agency_ezg', 'merit_hydro', 
             'basis_ezg' or 'hydrosheds'.
         if_exists : str
             The policy to handle existing files. Can be 'raise' or 'replace'.
@@ -729,8 +705,8 @@ class Station():
 
         """
         # check datasource
-        if datasource not in ['federal_agency', 'merit_hydro', 'basis_ezg', 'hydrosheds']:
-            raise ValueError(f"datasource must be either 'federal_agency', 'merit_hydro', 'basis_ezg' or 'hydrosheds', but is {datasource}")
+        if datasource not in ['federal_agency_ezg', 'merit_hydro', 'basis_ezg', 'hydrosheds']:
+            raise ValueError(f"datasource must be either 'federal_agency_ezg', 'merit_hydro', 'basis_ezg' or 'hydrosheds', but is {datasource}")
         
         # check catchment_geometry
         if not isinstance(catchment_geometry, gpd.GeoDataFrame):
@@ -763,4 +739,43 @@ class Station():
             catchment_geometry.to_file(spath, driver='GeoJSON')
 
         return spath
+    
+
+    def get_catchment(self, datasource: str) -> gpd.GeoDataFrame:
+        """
+        Load the catchment geometry from the output folder.
+
+        Parameters
+        ----------
+        datasource : str
+            The datasource of the geometry. Can be 'federal_agency_ezg', 'merit_hydro', 
+            'basis_ezg' or 'hydrosheds'.
+        
+        Returns
+        -------
+        catchment_geometry : geopandas.GeoDataFrame
+            geopandas.GeoDataFrame with the geometry for the catchment of the 
+            station.
+
+        """
+        # check datasource
+        if datasource not in ['federal_agency_ezg', 'merit_hydro', 'basis_ezg', 'hydrosheds']:
+            raise ValueError(f"datasource must be either 'federal_agency_ezg', 'merit_hydro', 'basis_ezg' or 'hydrosheds', but is {datasource}")
+
+        # get the nuts mapping
+        camels_id = self.camels_id
+
+        # generate the file name
+        fname = f"{camels_id}_{datasource}_catchment.geojson"
+        
+        # generate the path
+        spath = os.path.abspath(os.path.join(self.output_path, fname))
+
+        # check if there is data
+        if os.path.exists(spath):
+            catchment_geometry = gpd.read_file(spath)
+        else:
+            catchment_geometry = None
+
+        return catchment_geometry
     
