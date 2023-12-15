@@ -730,12 +730,13 @@ class Station():
             if if_exists == 'raise':
                 raise FileExistsError(f"{spath} already exists and if_exists policy is 'raise'")
             elif if_exists == 'replace':
+                # do nothing, the file will be overwritten
                 pass
             else:
                 raise ValueError(f"if_exists must be either 'raise' or 'replace', but is {if_exists}")
         
         # save geojson the file
-        elif isinstance(catchment_geometry, gpd.GeoDataFrame):
+        if isinstance(catchment_geometry, gpd.GeoDataFrame):
             # always transform to WGS84
             catchment_geometry = catchment_geometry.to_crs(epsg=4326)
 
