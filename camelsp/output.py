@@ -736,6 +736,10 @@ class Station():
         
         # save geojson the file
         elif isinstance(catchment_geometry, gpd.GeoDataFrame):
+            # always transform to WGS84
+            catchment_geometry = catchment_geometry.to_crs(epsg=4326)
+
+            # save
             catchment_geometry.to_file(spath, driver='GeoJSON')
 
         return spath
