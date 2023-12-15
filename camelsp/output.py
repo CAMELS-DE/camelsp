@@ -691,7 +691,7 @@ class Station():
         ----------
         catchment_geometry : geopandas.GeoDataFrame
             geopandas.GeoDataFrame with the geometry for the catchment of the 
-            station, which will be saved as a geojson in the output folder.
+            station, which will be saved as a geojson in WGS84 in the output folder.
         datasource : str
             The datasource of the geometry. Can be 'federal_agency_ezg', 'merit_hydro', 
             'basis_ezg' or 'hydrosheds'.
