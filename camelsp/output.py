@@ -13,7 +13,8 @@ import hashlib
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-from pandas_profiling import ProfileReport
+#from pandas_profiling import ProfileReport
+import geopandas as gpd
 
 from .util import nuts, get_output_path, BASEPATH, get_input_path, get_full_nuts_mapping, _get_logo, _NUTS_LVL2_NAMES, get_metadata, update_metadata
 
@@ -107,8 +108,10 @@ class Bundesland(AbstractContextManager):
         else:
             # get the current nuts mapping, but filter the new_nuts
             mapping = new_nuts + [c for c in all_nuts if c['nuts_id'] not in nuts_ids]
-
-        # save
+        
+        # save, create the directory and file if it does not exist
+        if not os.path.exists(self.meta_path):
+            os.makedirs(self.meta_path)
         with open(os.path.join(self.meta_path, 'nuts_mapping.json'), 'w') as f:
             json.dump(mapping, f, indent=4)
 
@@ -605,3 +608,179 @@ class Bundesland(AbstractContextManager):
             out[fname] = hsum
 
         return out
+
+
+class Station():
+    """
+    Class for handling station data and metadata.
+
+    """
+    def __init__(self, camels_id: str):
+        """
+        Parameters
+        ----------
+        camels_od : str
+            The station id of the station to be handled.
+        """
+        # set the station id
+        # get the mapping
+        mapping = get_full_nuts_mapping(format='csv')
+
+        # make sure that camels_id is a string
+        camels_id = str(camels_id)
+
+        # check if camels_id is actually a camels_id or a provider_id
+        if camels_id in mapping.provider_id.values:
+            provider_id = camels_id
+            self.camels_id = mapping.set_index('provider_id').loc[provider_id, 'nuts_id']
+            warnings.warn(f"{provider_id} is a provider_id and not a CAMELS-DE NUTSID. provider_id might have duplicates, using the first one: {camels_id}")
+        elif camels_id in mapping.nuts_id.values:
+            self.camels_id = camels_id
+        else:
+            raise ValueError(f"{camels_id} is neither a provider_id nor a CAMELS-DE NUTSID")
+
+        # get and set the Bundesland
+        self.bl = Bundesland(self.camels_id[0:3])
+
+        # metadata
+        meta = self.bl.metadata
+        self.metadata = meta[meta.camels_id == self.camels_id]
+
+        # name
+        self.name = self.metadata.gauge_name.values[0]
+
+        # location
+        self.lat = self.metadata.lat.values[0]
+        self.lon = self.metadata.lon.values[0]
+        
+        # set the output path
+        self.output_path = os.path.join(self.bl.output_path, self.camels_id)
+
+        # set the data path if data was already generated, else set to None
+        if os.path.exists(os.path.join(self.output_path, f'{self.camels_id}_data.csv')):
+            self.data_path = os.path.join(self.output_path, f'{self.camels_id}_data.csv')
+        else:
+            self.data_path = None
+
+        # get the nuts mapping
+        self.nuts_table = self.bl.nuts_table[self.bl.nuts_table.nuts_id == self.camels_id]
+
+
+    def get_data(self, date_index: bool = True) -> pd.DataFrame:
+        """
+        Read the data from the output folder and return as pandas dataframe.
+        Pass the CAMELS-DE nuts_id. 
+        If date_index is False, 'date' will be a
+        data column and a generic range-index is used.
+
+        """
+        # read in
+        df = pd.read_csv(self.data_path, parse_dates=['date'], dtype={'q': float, 'q_flag': 'boolean', 'w': float, 'w_flag': 'boolean'})
+
+        if date_index:
+            df.set_index('date', inplace=True)
+        
+        return df
+    
+
+    def save_catchment_geometry(self, catchment_geometry: gpd.GeoDataFrame, datasource: str, if_exists: str = 'raise') -> str:
+        """
+        Save the catchment geometry to the output folder.
+
+        Parameters
+        ----------
+        catchment_geometry : geopandas.GeoDataFrame
+            geopandas.GeoDataFrame with the geometry for the catchment of the 
+            station, which will be saved as a geojson in WGS84 in the output folder.
+        datasource : str
+            The datasource of the geometry. Can be 'federal_agency_ezg', 'merit_hydro', 
+            'basis_ezg' or 'hydrosheds'.
+        if_exists : str
+            The policy to handle existing files. Can be 'raise' or 'replace'.
+        
+        Returns
+        -------
+        path : str
+            The path to the saved file.
+
+        """
+        # check datasource
+        if datasource not in ['federal_agency_ezg', 'merit_hydro', 'basis_ezg', 'hydrosheds']:
+            raise ValueError(f"datasource must be either 'federal_agency_ezg', 'merit_hydro', 'basis_ezg' or 'hydrosheds', but is {datasource}")
+        
+        # check catchment_geometry
+        if not isinstance(catchment_geometry, gpd.GeoDataFrame):
+            raise ValueError("catchment_geometry is not a GeoDataFrame")
+        else:
+            # check that only one row is included
+            if len(catchment_geometry) != 1:
+                raise ValueError(f"catchment_geometry contains {len(catchment_geometry)} geometries / rows for the station, 1 is allowed")
+
+        # get the nuts mapping
+        camels_id = self.camels_id
+
+        # generate the save file name
+        fname = f"{camels_id}_{datasource}_catchment.geojson"
+        
+        # generate the save path
+        spath = os.path.abspath(os.path.join(self.output_path, fname))
+
+        # check if there is already data
+        if os.path.exists(spath):
+            if if_exists == 'raise':
+                raise FileExistsError(f"{spath} already exists and if_exists policy is 'raise'")
+            elif if_exists == 'replace':
+                # do nothing, the file will be overwritten
+                pass
+            else:
+                raise ValueError(f"if_exists must be either 'raise' or 'replace', but is {if_exists}")
+        
+        # save geojson the file
+        if isinstance(catchment_geometry, gpd.GeoDataFrame):
+            # always transform to WGS84
+            catchment_geometry = catchment_geometry.to_crs(epsg=4326)
+
+            # save
+            catchment_geometry.to_file(spath, driver='GeoJSON')
+
+        return spath
+    
+
+    def get_catchment(self, datasource: str) -> gpd.GeoDataFrame:
+        """
+        Load the catchment geometry from the output folder.
+
+        Parameters
+        ----------
+        datasource : str
+            The datasource of the geometry. Can be 'federal_agency_ezg', 'merit_hydro', 
+            'basis_ezg' or 'hydrosheds'.
+        
+        Returns
+        -------
+        catchment_geometry : geopandas.GeoDataFrame
+            geopandas.GeoDataFrame with the geometry for the catchment of the 
+            station.
+
+        """
+        # check datasource
+        if datasource not in ['federal_agency_ezg', 'merit_hydro', 'basis_ezg', 'hydrosheds']:
+            raise ValueError(f"datasource must be either 'federal_agency_ezg', 'merit_hydro', 'basis_ezg' or 'hydrosheds', but is {datasource}")
+
+        # get the nuts mapping
+        camels_id = self.camels_id
+
+        # generate the file name
+        fname = f"{camels_id}_{datasource}_catchment.geojson"
+        
+        # generate the path
+        spath = os.path.abspath(os.path.join(self.output_path, fname))
+
+        # check if there is data
+        if os.path.exists(spath):
+            catchment_geometry = gpd.read_file(spath)
+        else:
+            catchment_geometry = None
+
+        return catchment_geometry
+    
