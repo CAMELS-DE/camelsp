@@ -164,7 +164,7 @@ def get_input_path(bl: str = None):
         bl_folder = _INPUT_DEFAULT_PATHS[nuts(bl)]
 
     # return the path
-    return os.path.join(INPUT_PATH, bl_folder)
+    return os.path.join(INPUT_PATH, "Q_and_W", bl_folder)
 
 
 def get_full_nuts_mapping(base_path = OUTPUT_PATH, format='json'):
