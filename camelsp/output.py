@@ -13,7 +13,7 @@ import hashlib
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-from pandas_profiling import ProfileReport
+#from pandas_profiling import ProfileReport
 import geopandas as gpd
 
 from .util import nuts, get_output_path, BASEPATH, get_input_path, get_full_nuts_mapping, _get_logo, _NUTS_LVL2_NAMES, get_metadata, update_metadata
