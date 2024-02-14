@@ -1,5 +1,5 @@
 pandas
 dateparser
 dask
-pandas-profiling
+ydata-profiling
 patool

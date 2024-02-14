@@ -13,7 +13,7 @@ import hashlib
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-#from pandas_profiling import ProfileReport
+from ydata_profiling import ProfileReport
 import geopandas as gpd
 
 from .util import nuts, get_output_path, BASEPATH, get_input_path, get_full_nuts_mapping, _get_logo, _NUTS_LVL2_NAMES, get_metadata, update_metadata
@@ -328,8 +328,7 @@ class Bundesland(AbstractContextManager):
         
         return df
     
-    #TODO shouldn't if_exist default to raise, omit or skip? Also missing in docstring
-    def generate_reports(self, nuts_ids: Union[List[str], str] = 'all', fmt: str = 'html', output_folder: str = None, if_exists: str = 'replace') -> Union[str, ProfileReport]:
+    def generate_reports(self, nuts_ids: Union[List[str], str] = 'all', fmt: str = 'html', output_folder: str = None, if_exists: str = 'raise') -> Union[str, ProfileReport]:
         """
         Generate a JSON or HTML report of the data of the given nuts_ids.
 
@@ -340,11 +339,15 @@ class Bundesland(AbstractContextManager):
             the the string literal 'all' is accepted, to look up all IDs.
         fmt : str
             Return format. Can be 'html', 'json', 'object'. If Object, a 
-            pandas_profiling.ProfileReport is returned. In any other case the
+            ydata_profiling.ProfileReport is returned. In any other case the
             respective file is written into the output folder
         output_folder : str, optional
             Alternative output location. The default location is the 
             'report' folder in the base output location.
+        if_exists : str
+            The policy to handle existing files. Can be 'raise', 'replace' or
+            'omit'.
+
         """
         # get all nuts ids
         if nuts_ids == 'all':
