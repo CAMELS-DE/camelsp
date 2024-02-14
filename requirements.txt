@@ -1,5 +1,12 @@
+geopandas
 pandas
+numpy
+matplotlib
+plotly
+pyproj
 dateparser
 dask
 ydata-profiling
 patool
+glob
+tqdm
