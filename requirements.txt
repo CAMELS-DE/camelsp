@@ -8,5 +8,4 @@ dateparser
 dask
 ydata-profiling
 patool
-glob
 tqdm
