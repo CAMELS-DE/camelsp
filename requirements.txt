@@ -9,3 +9,4 @@ dask
 ydata-profiling
 patool
 tqdm
+openpyxl
