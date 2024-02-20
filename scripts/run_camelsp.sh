@@ -3,57 +3,59 @@ mkdir -p /camelsp/output_data/scripts
 exec > >(tee -a /camelsp/output_data/scripts/processing.log) 2>&1
 
 echo "[$(date +%T)] Starting camelsp preprocessing for DE1..."
-jupyter nbconvert --execute --output-dir=/camelsp/output_data/scripts --to notebook --log-level WARN /camelsp/scripts/preprocess_de1.ipynb
+papermill /camelsp/scripts/preprocess_de1.ipynb /camelsp/output_data/scripts/preprocess_de1_output.ipynb
 
 echo "[$(date +%T)] Starting camelsp preprocessing for DE2..."
-jupyter nbconvert --execute --output-dir=/camelsp/output_data/scripts --to notebook --log-level WARN /camelsp/scripts/preprocess_de2.ipynb
+papermill /camelsp/scripts/preprocess_de2.ipynb /camelsp/output_data/scripts/preprocess_de2_output.ipynb
 
 echo "[$(date +%T)] Starting camelsp preprocessing for DE4..."
-jupyter nbconvert --execute --output-dir=/camelsp/output_data/scripts --to notebook --log-level WARN /camelsp/scripts/preprocess_de4.ipynb
+papermill /camelsp/scripts/preprocess_de4.ipynb /camelsp/output_data/scripts/preprocess_de4_output.ipynb
 
 echo "[$(date +%T)] Starting camelsp preprocessing for DE7..."
-jupyter nbconvert --execute --output-dir=/camelsp/output_data/scripts --to notebook --log-level WARN /camelsp/scripts/preprocess_de7.ipynb
+papermill /camelsp/scripts/preprocess_de7.ipynb /camelsp/output_data/scripts/preprocess_de7_output.ipynb
 
 echo "[$(date +%T)] Starting camelsp preprocessing for DE8..."
-jupyter nbconvert --execute --output-dir=/camelsp/output_data/scripts --to notebook --log-level WARN /camelsp/scripts/preprocess_de8.ipynb
+papermill /camelsp/scripts/preprocess_de8.ipynb /camelsp/output_data/scripts/preprocess_de8_output.ipynb
 
 echo "[$(date +%T)] Starting camelsp preprocessing for DE9..."
-jupyter nbconvert --execute --output-dir=/camelsp/output_data/scripts --to notebook --log-level WARN /camelsp/scripts/preprocess_de9.ipynb
+papermill /camelsp/scripts/preprocess_de9.ipynb /camelsp/output_data/scripts/preprocess_de9_output.ipynb
 
 echo "[$(date +%T)] Starting camelsp preprocessing for DEA..."
-jupyter nbconvert --execute --output-dir=/camelsp/output_data/scripts --to notebook --log-level WARN /camelsp/scripts/preprocess_dea.ipynb
+papermill /camelsp/scripts/preprocess_dea.ipynb /camelsp/output_data/scripts/preprocess_dea_output.ipynb
 
 echo "[$(date +%T)] Starting camelsp preprocessing for DEB..."
-jupyter nbconvert --execute --output-dir=/camelsp/output_data/scripts --to notebook --log-level WARN /camelsp/scripts/preprocess_deb.ipynb
+papermill /camelsp/scripts/preprocess_deb.ipynb /camelsp/output_data/scripts/preprocess_deb_output.ipynb
 
 echo "[$(date +%T)] Starting camelsp preprocessing for DEC..."
-jupyter nbconvert --execute --output-dir=/camelsp/output_data/scripts --to notebook --log-level WARN /camelsp/scripts/preprocess_dec.ipynb
+papermill /camelsp/scripts/preprocess_dec.ipynb /camelsp/output_data/scripts/preprocess_dec_output.ipynb
 
 echo "[$(date +%T)] Starting camelsp preprocessing for DED..."
-jupyter nbconvert --execute --output-dir=/camelsp/output_data/scripts --to notebook --log-level WARN /camelsp/scripts/preprocess_ded.ipynb
+papermill /camelsp/scripts/preprocess_ded.ipynb /camelsp/output_data/scripts/preprocess_ded_output.ipynb
 
 echo "[$(date +%T)] Starting camelsp preprocessing for DEE..."
-jupyter nbconvert --execute --output-dir=/camelsp/output_data/scripts --to notebook --log-level WARN /camelsp/scripts/preprocess_dee.ipynb
+papermill /camelsp/scripts/preprocess_dee.ipynb /camelsp/output_data/scripts/preprocess_dee_output.ipynb
 
 echo "[$(date +%T)] Starting camelsp preprocessing for DEF..."
-jupyter nbconvert --execute --output-dir=/camelsp/output_data/scripts --to notebook --log-level WARN /camelsp/scripts/preprocess_def.ipynb
+papermill /camelsp/scripts/preprocess_def.ipynb /camelsp/output_data/scripts/preprocess_def_output.ipynb
 
 echo "[$(date +%T)] Starting camelsp preprocessing for DEG..."
-jupyter nbconvert --execute --output-dir=/camelsp/output_data/scripts --to notebook --log-level WARN /camelsp/scripts/preprocess_deg.ipynb
+papermill /camelsp/scripts/preprocess_deg.ipynb /camelsp/output_data/scripts/preprocess_deg_output.ipynb
 
 echo "[$(date +%T)] Transforming coordinates..."
-jupyter nbconvert --execute --output-dir=/camelsp/output_data/scripts --to notebook --log-level WARN /camelsp/scripts/transform_coords.ipynb
+papermill /camelsp/scripts/transform_coords.ipynb /camelsp/output_data/scripts/transform_coords_output.ipynb
 
 echo "[$(date +%T)] Generating and merging metadata..."
-jupyter nbconvert --execute --output-dir=/camelsp/output_data/scripts --to notebook --log-level WARN /camelsp/scripts/merge_metadata.ipynb
+papermill /camelsp/scripts/merge_metadata.ipynb /camelsp/output_data/scripts/merge_metadata_output.ipynb
 
 echo "[$(date +%T)] Generate data reports for each station (this may take a while)..."
-jupyter nbconvert --execute --output-dir=/camelsp/output_data/scripts --to notebook --log-level WARN /camelsp/scripts/generate_reports.ipynb
+papermill /camelsp/scripts/generate_reports.ipynb /camelsp/output_data/scripts/generate_reports_output.ipynb
 
 echo "[$(date +%T)] Cleaning up stations..."
-jupyter nbconvert --execute --output-dir=/camelsp/output_data/scripts --to notebook --log-level WARN /camelsp/scripts/cleanup_stations.ipynb
+papermill /camelsp/scripts/cleanup_stations.ipynb /camelsp/output_data/scripts/cleanup_stations_output.ipynb
 
 echo "[$(date +%T)] Calculating statistics and generating visualizations for the webiste..."
-jupyter nbconvert --execute --output-dir=/camelsp/output_data/scripts --to notebook --log-level WARN /camelsp/scripts/dataset_metrics.ipynb
+papermill /camelsp/scripts/dataset_metrics.ipynb /camelsp/output_data/scripts/dataset_metrics_output.ipynb
 
 echo "[$(date +%T)] Finished preprocessing camelsp data."
+
+chmod -R 777 /camelsp/output_data/

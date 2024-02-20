@@ -16,23 +16,16 @@ RUN pip install dask==2024.2.0
 RUN pip install ydata-profiling==4.6.4
 RUN pip install tqdm==4.66.2
 RUN pip install openpyxl==3.1.2
+RUN pip install papermill==2.5.0
+RUN pip install jupyter
 
 # Install camelsp from GitHub
 RUN git clone https://github.com/CAMELS-DE/camelsp.git
 WORKDIR /camelsp
 RUN pip install -e .
 
-# Install jupyter
-RUN pip install jupyter
-
-# Create a new user, this fixes permission issues of files created by the container / camelsp
-RUN useradd -m camel
-
-# Switch to the new user
-USER camel
-
 # Copy run_camelsp.sh to the container
-COPY --chown=camel scripts/run_camelsp.sh /camelsp/run_camelsp.sh
+COPY scripts/run_camelsp.sh /camelsp/run_camelsp.sh
 
 # Make the script executable
 RUN chmod +x /camelsp/run_camelsp.sh
