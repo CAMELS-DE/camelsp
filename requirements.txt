@@ -7,6 +7,5 @@ pyproj
 dateparser
 dask
 ydata-profiling
-patool
 tqdm
 openpyxl
