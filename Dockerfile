@@ -25,8 +25,14 @@ RUN pip install -e .
 # Install jupyter
 RUN pip install jupyter
 
+# Create a new user, this fixes permission issues of files created by the container / camelsp
+RUN useradd -m camel
+
+# Switch to the new user
+USER camel
+
 # Copy run_camelsp.sh to the container
-COPY scripts/run_camelsp.sh /camelsp/run_camelsp.sh
+COPY --chown=camel scripts/run_camelsp.sh /camelsp/run_camelsp.sh
 
 # Make the script executable
 RUN chmod +x /camelsp/run_camelsp.sh
