@@ -17,7 +17,7 @@ RUN pip install ydata-profiling==4.6.4
 RUN pip install tqdm==4.66.2
 RUN pip install openpyxl==3.1.2
 RUN pip install papermill==2.5.0
-RUN pip install jupyter
+RUN pip install jupyter==1.0.0
 
 # Install camelsp from GitHub
 RUN git clone https://github.com/CAMELS-DE/camelsp.git
