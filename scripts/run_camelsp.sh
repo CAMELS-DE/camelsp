@@ -3,6 +3,9 @@ mkdir -p /camelsp/output_data/scripts/camelsp
 
 exec > >(tee -a /camelsp/output_data/scripts/camelsp/processing.log) 2>&1
 
+# Start processing
+echo "[$(date +%F\ %T)] Starting processing of camelsp for the CAMELS-DE dataset..."
+
 echo "[$(date +%T)] Starting camelsp preprocessing for DE1..."
 papermill /camelsp/scripts/preprocess_de1.ipynb /camelsp/output_data/scripts/camelsp/preprocess_de1_output.ipynb --no-progress-bar
 
