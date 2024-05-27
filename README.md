@@ -26,8 +26,8 @@ Help scripts indicating the usage for possible re-processing are located at the 
 
 ## NUTS
 
-We use nuts2 codes to derive ids and to build a folder structure. There is a case-insensitve utility function
-for looking up the top level 2 NUTS codes in the package, which should accept many existing abbreviations:
+We use nuts1 codes to derive ids and to build a folder structure. There is a case-insensitve utility function
+for looking up the top level 1 NUTS codes in the package, which should accept many existing abbreviations:
 
 ```python
 from camelsp import nuts3
