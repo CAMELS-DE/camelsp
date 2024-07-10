@@ -87,3 +87,9 @@ with Bundesland('Sachsen-Anhalt') as bl:
     # OR the function - use other column optionally
     bl.update_metadata(new_metadata, 'existing_primary_key')
 ```
+
+## Docker container:
+
+```bash
+docker run -v ./input_data:/camelsp/input_data -v ./output_data_docker:/camelsp/output_data -it --rm camelsp
+```
