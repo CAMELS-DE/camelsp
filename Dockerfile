@@ -25,7 +25,7 @@ WORKDIR /camelsp
 RUN pip install -e .
 
 # Copy run_camelsp.sh to the container
-COPY scripts/run_camelsp.sh /camelsp/run_camelsp.sh
+COPY ./scripts /scripts
 
 # Make the script executable
 RUN chmod +x /camelsp/run_camelsp.sh
