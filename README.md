@@ -14,6 +14,9 @@ cd input_data
 wget https://bwsyncarndshare.kit.edu/s/<SHARE_TOKEN>/download
 ```
 
+> **NOTE**: `wget` the input data folder only works if you are part of the CAMELS-DE team and have access to the bwsyncandshare folder.  
+> Unfortunately, we are not allowed to share the raw data provided by the federal states openly.
+
 On https://hub.camels-de.org, the installation can be skipped
 
 ## Scripts
